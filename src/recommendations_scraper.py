@@ -36,6 +36,6 @@ def get_recommended_videos(videos_df):
 
 if __name__ == '__main__':
     print("we are here")
-    videos_df = pd.read_csv(r'/Users/tabziasmac/Downloads/Thesis-Dataset/Videos_Dataframe_1.csv')
+    videos_df = pd.read_csv(r'../data/Thesis-Dataset/Thesis-Dataset/Videos_Dataframe_1.csv')
     get_recommended_videos(videos_df)
     print("Call completed")

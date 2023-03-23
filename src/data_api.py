@@ -161,7 +161,7 @@ def comments_extractor(videos_df):
 
 if __name__ == '__main__':
     #search_keywords = ['Donkey India to USA', 'Donki', 'Serbia India', 'Panama Donki Donkey', 'USA Border Crossing India'] #Functionality to search multiple keywords - raises concerns of Data quota per day per api key
-    search_keywords = ['Donkey India to USA']
+    search_keywords = ['Donki Dunki']
     results_dict = {}
     for i in search_keywords:
         #get search results
@@ -179,6 +179,6 @@ if __name__ == '__main__':
         print(len(comments_df))
 
     #Save to CSV - better way to do this to be able to run the script each time is to connect to database - on cloud perhaps ?
-    videos_df.to_csv(r'/Users/tabziasmac/Downloads/Thesis-Dataset/Videos_Dataframe_1.csv')
-    videoStats_df.to_csv(r'/Users/tabziasmac/Downloads/Thesis-Dataset/Videos_Stats_Dataframe_2.csv')
-    comments_df.to_csv(r'/Users/tabziasmac/Downloads/Thesis-Dataset/Comments_Dataframe_2.csv')
+    videos_df.to_csv(r'../data/Thesis-Dataset/Videos_Dataframe_25022023_2.csv')
+    videoStats_df.to_csv(r'../data/Thesis-Dataset/Videos_Stats_Dataframe_25022023_2.csv')
+    comments_df.to_csv(r'../data/Thesis-Dataset/Comments_Dataframe_25022023_2.csv')
