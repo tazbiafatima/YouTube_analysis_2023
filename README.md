@@ -4,12 +4,25 @@ This project aims to create a pipeline classifying YouTube videos on a particula
 
 The docs directory contains output docs for testing 
 The data directory contains .csv files after the python files have been executed. 
-
+The docs directory contains output docs for testing 
+6
+The data directory contains .csv files after the python files have been executed. 
+7
+​
+8
 data_api.py - contains code to create a base dataset of all videos on a particular topic. 
-The method search_by_keyword invokes a search to the YouTube Data Api, navigates through page results to create a set of videoIds.
-These videoIds are sent to metadata_extractor to extract metadata about the video - this is saved as videos_df - dataframe
-The videoIds from videos_df are sent to the 'statistics_extractor' method to get likes, views, comments count for data analysis. 
-The videoIds from videos_df are sent to the 'comments_extractor' to invoke Data API to get all comments from a video and creates a comments_df. 
+9
+-  The method `search_by_keyword` invokes a search to the YouTube Data Api, navigates through page results to create a set of videoIds.
+10
+- These videoIds are sent to `metadata_extractor` to extract metadata about the video - this is saved as `videos_df` - dataframe
+11
+- The videoIds from videos_df are sent to the '`statistics_extractor`' method to get likes, views, comments count for data analysis. 
+12
+- The videoIds from videos_df are sent to the '`comments_extractor`' to invoke Data API to get all comments from a video and creates a comments_df. 
+13
+​
+14
+With the above we have a pipeline to get video information using the API 
 
 With the above we have a pipeline to get video information using the API 
 However, data quota is a challenge in using the API - it gives 10,000 'coins' per key, per day. Different requests have a different cost. 
