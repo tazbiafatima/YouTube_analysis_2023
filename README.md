@@ -1,13 +1,12 @@
 # YouTube_analysis_2023
 
+## Data Collection
+
 This project aims to create a pipeline classifying YouTube videos on a particular category. 
 
-The docs directory contains output docs for testing 
-The data directory contains .csv files after the python files have been executed. 
-The docs directory contains output docs for testing 
-6
-The data directory contains .csv files after the python files have been executed. 
-7
+- The docs directory contains output docs for testing 
+- The data directory contains .csv files after the python files have been executed. 
+
 ​
 8
 data_api.py - contains code to create a base dataset of all videos on a particular topic. 
@@ -22,29 +21,26 @@ data_api.py - contains code to create a base dataset of all videos on a particul
 13
 ​
 14
-With the above we have a pipeline to get video information using the API 
 
 With the above we have a pipeline to get video information using the API 
+
 However, data quota is a challenge in using the API - it gives 10,000 'coins' per key, per day. Different requests have a different cost. 
 Comments and Videos call are 1 coin each. Whereas a search is 100 coins - this search_by_keyword will be our biggest expense + challenge in making this realtime. 
-I've applied for extra api quota but haven't gotten a response yet. 
 
-The recommendations_scraper.py contains a YouTube crawler that does one job only - navigates to a video_url from the videos_df dataset and then find the recommended video from the left panel and goes to it.
-Kind of like an endless loop. 
-All it collects is video_urls. 
+To work around this data quota limitation, we will run the recommendations_scraper.py contains a YouTube crawler that does one job only - navigates to a video_url from the videos_df dataset and then find the recommended video from the left panel and goes to it.
 
-The initial idea for the pipeline was to use this list of video_urls and feed it back to data_api to get the metadata, statistics and comments from the API - since it's a cleaner code and faster result. 
+It collects video_urls, which are then used by data_api.py to get data for each videos. 
 
-However, due to the limitation of the api quota, I'm considering just scraping all the metadata and comments from each video. We have to determine the stopping condition here and how to access more historical bideos like those in 2019-2020-2021
+### TO USE THIS DATA COLLECTION METHOD, JUST REPLACE THE KEYWORD in the main function of data_api.py to search by your keyword. 
 
-If we use the api to search we can sort by date abd get older results. 
+## CLUSTERING
 
-Next Steps: 
-Continue to work on the data-collection pipeline - towards making it real-time 
-Use existing dataset from api and keep collecting from api to perform the classification. 
+The datasets are stored in the data directory under the relevant sub-directory of comment, metadata or combined. 
+We have implemented two types of clustering - one using just the titles and descriptions of the videos in the clustering_classification.py - all outputs from this are printed in the terminal and second using the titles, descriptions and comments in the YouTube_Analysis_Clustering_2023.ipynb. 
 
-For the classifier - more than comments - it looks like "Description" text is more appropriate. A combination of both might help.
-The comments can be used to analyse the engagement on the video though. 
+Both clustering first combines using the datasets from previous set, does the data processing, then clustering then either topic modeling or entity extraction. 
 
-There are some explicit results showing up when collecting data from the api - Have to add functionality to filter for this before adding to the dataframe.
+### We use k-means clustering with Elbow method to find k 
+
+clustering_classification.py also implements supervised classification to test the precision of the clustering and classifier. 
 
