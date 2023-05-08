@@ -42,6 +42,7 @@ import os
 all_emojis = []
 all_emoticons = []
 
+#combine and drop datasets
 def create_dataset(file_list, dataset_descriptions):
     for file in file_list:
                 if file == '.DS_Store':
@@ -113,9 +114,7 @@ def remove_spaces(text_list):
         new_list.append(i)
     return new_list
 
-
-
-
+#topic-modelling results are printed in the terminal
 def topic_modeling(X_train, X_test):
 
     X_train = X_train.apply(tokenization)
@@ -141,7 +140,7 @@ def topic_modeling(X_train, X_test):
 
     return lda_model
 
-
+#clustering implementation
 def text_clustering(X_train, X_test):
 
     #id2word = corpora.Dictionary(X_train)
@@ -211,13 +210,14 @@ def text_clustering(X_train, X_test):
 
     return predicted
 
+#Kmeans-clusters model
 def gen_model(X, n_clusters, init='k-means++', max_iter=100, n_init=1):
     print(n_clusters)
     model = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=max_iter, n_init=n_init)
     model.fit(X)
     return model
 
-
+#function to perform supervised classification
 def classify(test):
     train = pd.read_csv('/Users/tabziasmac/Downloads/Thesis-Dataset/Training_dataset_02272023.csv')
     val = pd.read_csv('/Users/tabziasmac/Downloads/Thesis-Dataset/Validation_dataset_02272023.csv')
@@ -276,8 +276,6 @@ def classify(test):
     val_set = count_vect.transform(X_val)
     predictions  = clf.predict(val_set)
     #print(clf.predict(val_set))
-
-
 
     predictions = pd.Series(predictions)
 
@@ -356,8 +354,9 @@ if __name__ == '__main__':
     image = wordcloud.to_image()
     image.show()
 
+    # the following needs to be run during classification ONLY
     '''
-
+    
     print((classification_dataset).shape)
     print(len(X))
     train = classification_dataset.sample(frac=0.8, random_state=200)

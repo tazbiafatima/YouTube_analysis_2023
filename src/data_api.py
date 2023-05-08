@@ -1,10 +1,13 @@
 from googleapiclient.discovery import build
 import pandas as pd
+from datetime import date
 import os
+import numpy as np
+from numpy import nan
+import sys
 
 # Arguments that need to be passed to the build function
-DEVELOPER_KEY = "AIzaSyDyIPEbZyXYGnWbpYVw8aelRSWii9PYdXk"
-    #"AIzaSyBpDGSPpVRtS-qWVI6-qisByu3_PbErgHw"
+DEVELOPER_KEY = "AIzaSyBpDGSPpVRtS-qWVI6-qisByu3_PbErgHw"
     #"AIzaSyD4y8XJV48ZYsslvV14QFFKDtc3ysTMMWQ"
     #"AIzaSyA_YBytnNpd_E-hAPb0ZtNAztQHGQeJG2U"
     #"AIzaSyACGb0J5vc-ht2J_i8YnsJ23BXoAA0lfMs"
@@ -16,6 +19,8 @@ DEVELOPER_KEY = "AIzaSyDyIPEbZyXYGnWbpYVw8aelRSWii9PYdXk"
     #"AIzaSyDJ8_kexjuBwGRVyWZBLhDiVxRU7ezIVRc"
     #"AIzaSyDvAZhY9aSY7YvWcck5J72DigPfOOmKsO0"
     #"AIzaSyApiBTZgAOVNbRaLB7F2f7reIUoM4x_xZE"
+    #"AIzaSyDyIPEbZyXYGnWbpYVw8aelRSWii9PYdXk"
+
 
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
@@ -54,35 +59,63 @@ def search_by_keyword(query, max_results, quota):
     print("Out of while loop")
     return all_results
 
-def metadata_extractor(all_results):
+def metadata_extractor(all_results, flag):
     # extracting required info from each result object
+    print("ALL_RESULTS ARE:", all_results)
     for result in all_results:
     #video result object
-       if result['id']['kind'] == "youtube#video":
-           videoId = result["id"]["videoId"]
-           publishedDate = result['snippet']['publishedAt']
-           title = result["snippet"]["title"]
-           videoUrl = "https://www.youtube.com/watch?v=" + str(videoId)
-           description = result['snippet']['description']  #text from the descriptionbox of each video
-           channelId = result["snippet"]["channelId"]
-           channelTitle = result["snippet"]["channelTitle"]
-           videos_df.loc[len(videos_df.index)] = [videoId, publishedDate, title, videoUrl, description, channelId, channelTitle]
+        print("RESULT is:", result)
+        print("RESULTS PRINTED")
+        print("RESULT ID KIND", result['kind'])
+        if flag == '0' and result['id']['kind'] == "youtube#video":
+            videoId = result["id"]["videoId"]
+        if flag == '1' and result['kind'] == "youtube#video":
+            videoId = result['id']
+        else:
+            continue
+        if videoId:
+            publishedDate = result['snippet']['publishedAt']
+            title = result["snippet"]["title"]
+            videoUrl = "https://www.youtube.com/watch?v=" + str(videoId)
+            description = result['snippet']['description']  #text from the descriptionbox of each video
+            channelId = result["snippet"]["channelId"]
+            channelTitle = result["snippet"]["channelTitle"]
+            videos_df.loc[len(videos_df.index)] = [videoId, publishedDate, title, videoUrl, description, channelId, channelTitle]
 
     return videos_df
 
-def statistics_extractor(videos_df):
+def statistics_extractor(videos_df, flag):
     all_stats = []
+    all_dfs = []
     i = 0
+    x = 0
     videoIds = videos_df['videoId']
+    videos_df_2 = pd.DataFrame()
+    #print()
     while i < len(videoIds):
-        j = i + 50 #using these variables as only 50 videoIds can be sent at a time to the api
+        j = i + 50  # using these variables as only 50 videoIds can be sent at a time to the api
         video_subset = videoIds[i:j]
+        print("The video subset is:", video_subset)
+        video_subset = [i.replace('https://www.youtube.com/watch?v=', '') for i in video_subset]
         video_subset = ','.join(video_subset)
+        print("VIDEO SUBSET IS:", video_subset)
         stats_response = youtube_object.videos().list(part="id, snippet, statistics", id=video_subset).execute()
         if stats_response:
+            print("STATS RESPONSE IS", stats_response)
             stats = stats_response.get("items", [])
+            print("STATS ARE: ", stats)
         all_stats.extend(stats)
+        print("FLAG IS: ", flag)
+        if flag == '1':
+            videos_df_temp = metadata_extractor(all_stats, flag)
+            print("VIDEOS DF TEMP", videos_df_temp)
+            print("X IS:", x)
+            #videos_df_2 = pd.DataFrame.combine(videos_df_2, videos_df_temp)
+            all_dfs.append(videos_df_temp)
+            x = x + 1
         i = j
+    print("ALL_DFS is :", all_dfs)
+    videos_df_2 = pd.concat(all_dfs)
     for video in all_stats:
         if video['kind'] == "youtube#video":
             videoId = video["id"]
@@ -107,7 +140,10 @@ def statistics_extractor(videos_df):
             else:
                 commentCount = None
             videoStats_df.loc[len(videoStats_df.index)] = [videoId, tags, viewCount, likeCount, favoriteCount, commentCount]
-    return videoStats_df
+    if flag == '1':
+        return videos_df_2, videoStats_df
+    if flag == '0':
+        return videoStats_df
 
 #comment extractor code. We have a list of videoURLs you have to get all comments.
 def comments_extractor(videos_df):
@@ -119,6 +155,8 @@ def comments_extractor(videos_df):
         video_subset = videoIds[i:j]
         for video in video_subset:
             try:
+                if flag == '1':
+                    video = video.replace('https://www.youtube.com/watch?v=', '')
                 comments_response = youtube_object.commentThreads().list(part="id, snippet, replies", videoId=video).execute()
             except:
                 print("Request failed: Disabled Comments")
@@ -160,25 +198,52 @@ def comments_extractor(videos_df):
     return comments_df
 
 if __name__ == '__main__':
-    #search_keywords = ['Donkey India to USA', 'Donki', 'Serbia India', 'Panama Donki Donkey', 'USA Border Crossing India'] #Functionality to search multiple keywords - raises concerns of Data quota per day per api key
-    search_keywords = ['Donki Dunki']
-    results_dict = {}
-    for i in search_keywords:
-        #get search results
-        keyword_result = search_by_keyword(i, max_results=50, quota=quota)
-        #get video info
-        videos_df = metadata_extractor(keyword_result)
-        # drop duplicates by videoId
-        videos_df = videos_df.drop_duplicates(subset='videoId', keep="first")
-        #get video stats
-        videoStats_df = statistics_extractor(videos_df)
-        # drop duplicates by videoId
-        videoStats_df = videoStats_df.drop_duplicates(subset='videoId', keep="first")
-        #get comments
-        comments_df = comments_extractor(videos_df)
-        print(len(comments_df))
+    date = date.today()
+    flag = sys.argv[1]
+    print("The flag is:", flag)
+    if flag == '0': #you want to collect video data by search
+        #search_keywords = ['Donkey India to USA', 'Donki', 'Serbia India', 'Panama Donki Donkey', 'USA Border Crossing India'] #Functionality to search multiple keywords - raises concerns of Data quota per day per api key
+        search_keywords = ['Donki Dunki', 'Donkey India to USA']
+        results_dict = {}
+        for i in search_keywords:
+            #get search results
+            keyword_result = search_by_keyword(i, max_results=50, quota=quota)
+            #get video info
+            videos_df = metadata_extractor(keyword_result, flag)
+            # drop duplicates by videoId
+            videos_df = videos_df.drop_duplicates(subset='videoId', keep="first")
+            #get video stats
+            videoStats_df = statistics_extractor(videos_df, flag)
+            # drop duplicates by videoId
+            videoStats_df = videoStats_df.drop_duplicates(subset='videoId', keep="first")
+            #get comments
+            comments_df = comments_extractor(videos_df)
+            term = str(i)
+            term = term.replace(' ', '_')
+            #Save to CSV
+            videos_df.to_csv(fr'../data/Thesis-Dataset/Videos_Dataframe_{date}_{term}.csv')
+            videoStats_df.to_csv(fr'../data/Thesis-Dataset/Videos_Stats_Dataframe_{date}_{term}.csv')
+            comments_df.to_csv(fr'../data/Thesis-Dataset/Comments_Dataframe_{date}_{term}.csv')
 
-    #Save to CSV - better way to do this to be able to run the script each time is to connect to database - on cloud perhaps ?
-    videos_df.to_csv(r'../data/Thesis-Dataset/Videos_Dataframe_25022023_2.csv')
-    videoStats_df.to_csv(r'../data/Thesis-Dataset/Videos_Stats_Dataframe_25022023_2.csv')
-    comments_df.to_csv(r'../data/Thesis-Dataset/Comments_Dataframe_25022023_2.csv')
+    if flag == '1': #you want to collect video data of a list of videos
+        videos = pd.read_csv(f'../data/Thesis-Dataset/Videos_Df_2023-04-10.csv')
+        print("videos is:", videos)
+        videos  = videos.dropna()
+        #get all metadata and statistics:
+        videos_df, videoStats_df = statistics_extractor(videos, flag)
+        videos_df = videos_df.drop_duplicates(subset='videoId', keep="first")
+        videoStats_df = videoStats_df.drop_duplicates(subset='videoId', keep="first")
+        #get all comments for each list
+        comments_df = comments_extractor(videos)
+        # Save to CSV
+        videos_df.to_csv(fr'../data/Thesis-Dataset/Videos_Dataframe_{date}_rec.csv')
+        videoStats_df.to_csv(fr'../data/Thesis-Dataset/Videos_Stats_Dataframe_{date}_rec.csv')
+        comments_df.to_csv(fr'../data/Thesis-Dataset/Comments_Dataframe_{date}_rec.csv')
+
+
+
+
+
+
+
+
